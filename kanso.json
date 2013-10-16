@@ -1,0 +1,22 @@
+{
+    "name": "Cozy-files",
+    "version": "0.0.1",
+    "description": "Configure your data proxy",
+    "load": "lib/app",
+    "modules": ["lib"],
+    "attachments": ["index.html"],
+    "coffee-script": {
+        "modules": ["lib"]
+    },
+    "dependencies": {
+        "attachments": null,
+        "modules": null,
+        "underscore": null,
+        "events": null,
+        "db": null,
+        "base64": null,
+        "jquery": null,       
+        "coffee-script-precompiler": null,
+        "replication": null
+    }
+}

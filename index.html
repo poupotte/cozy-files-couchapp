@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cozy File</title>
+    <link rel="stylesheet" href="style/main.css" type="text/css">
+  </head>
+  <body>
+
+    <h1>Cozy File</h1>
+
+    <div id="content">
+      <p> Url of your cozy !!! <input type="text" id="url"></p>
+      <p> Password of your cozy <input type="password" id="password"></p>
+      <p> Name of your remote <input type="text" id="name"></p>
+      <p><input type="button" value="Add" id ="add" onclick="addRemote()"></p>
+    </div>
+
+    
+  </body>
+<!-- templates used by app.js -->
+  <script type="text/javascript" src="modules.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<!--  <script type="text/javascript" charset="utf-8">
+  var exports = this;
+  jQuery(function(){
+    var App = require("lib/app");
+    exports.app = new App({el: $("#content")});
+  });
+</script> -->
+<script type="text/javascript">
+  var app = require('lib/app');
+  addRemote = app.addRemote;
+</script>
+</html>
