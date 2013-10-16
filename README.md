@@ -1,4 +1,4 @@
-# Cozy Files
+# Cozy Files couchApp
 
 Cozy Files couchApp allows to configure your remote. 
 
