@@ -14,11 +14,13 @@ exports.addRemote =  () =>
             if partialUrl.indexOf('cozycloud.cc') isnt -1
                 cozyUrl = 'https://' + partialUrl 
         sendRequestRemote name, password, cozyUrl, 0, (err, remotePassword) =>
-            alert err if err
-            callReplications url, name, remotePassword, (err, res)=>
-                alert err if err
-                callCouchFuse folder, (err, res) =>
+            if err
+                alert err
+            else
+                callReplications cozyUrl, name, remotePassword, (err, res)=>
                     alert err if err
+                    #callCouchFuse folder, (err, res) =>
+                    #    alert err if err
                     alert 'Your remote is well configured'
 
 
@@ -37,8 +39,7 @@ initDb = (callback) =>
                 "        return false; \n" +
                 "    }\n" +
                 "}"
-    db.saveDoc filter, (err, res) =>
-        alert err if err    
+    db.saveDoc filter, (err, res) => 
         # Init file view
         docFile = 
             _id: "_design/file"
@@ -50,10 +51,9 @@ initDb = (callback) =>
                     "    }\n" + 
                     "}"
         db.saveDoc docFile, (err, res) =>
-            alert err if err    
             # Init folder view
             docFolder = 
-                _id: "_design/file"
+                _id: "_design/folder"
                 views:
                     "all": 
                         "map": "function (doc) {\n" +
@@ -113,3 +113,6 @@ callReplications = (url, name, password, callback) =>
             "continuous": true
             "filter": "filter/filesfilter"
         replication.start data, callback
+
+#callCouchFuse = (path, callback) =>
+    
