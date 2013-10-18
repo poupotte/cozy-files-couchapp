@@ -8,21 +8,23 @@ exports.addRemote =  () =>
         name = $("#name")[0].value
         password = $("#password")[0].value
         url = $("#url")[0].value
+        folder = $("#folder")[0].value
         url = url.split('/')
         for partialUrl in url
             if partialUrl.indexOf('cozycloud.cc') isnt -1
                 cozyUrl = 'https://' + partialUrl 
         sendRequestRemote name, password, cozyUrl, 0, (err, remotePassword) =>
-            if err
-                alert err
-            else
-                callReplications url, name, remotePassword, (err, res)=>
+            alert err if err
+            callReplications url, name, remotePassword, (err, res)=>
+                alert err if err
+                callCouchFuse folder, (err, res) =>
                     alert err if err
                     alert 'Your remote is well configured'
 
 
 initDb = (callback) =>   
-    doc =
+    # Init filter
+    filter =
         _id: "_design/filter"
         filters:
             filesfilter: "function (doc, req) {\n" +
@@ -35,7 +37,31 @@ initDb = (callback) =>
                 "        return false; \n" +
                 "    }\n" +
                 "}"
-    db.saveDoc doc, callback
+    db.saveDoc filter, (err, res) =>
+        alert err if err    
+        # Init file view
+        docFile = 
+            _id: "_design/file"
+            views:
+                "all": 
+                    "map": "function (doc) {\n" +
+                    "    if (doc.docType === \"File\") {\n" +
+                    "        emit(doc.id, doc) \n" +
+                    "    }\n" + 
+                    "}"
+        db.saveDoc docFile, (err, res) =>
+            alert err if err    
+            # Init folder view
+            docFolder = 
+                _id: "_design/file"
+                views:
+                    "all": 
+                        "map": "function (doc) {\n" +
+                        "    if (doc.docType === \"Folder\") {\n" +
+                        "        emit(doc.id, doc) \n" +
+                        "    }\n" + 
+                        "}"
+            db.saveDoc docFolder, callback
 
 sendRequestRemote = (name, password, url, test, callback) =>
     urlReq = '/cozy/_test/?name=' + name + '&password=' + password + "&url=" + url 
