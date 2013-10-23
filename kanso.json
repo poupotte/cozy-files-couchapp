@@ -4,7 +4,7 @@
     "description": "Configure your data proxy",
     "load": "lib/app",
     "modules": ["lib"],
-    "attachments": ["index.html"],
+    "attachments": ["index.html", "lib/main.css"],
     "coffee-script": {
         "modules": ["lib"]
     },
