@@ -13,14 +13,12 @@ exports.addRemote =  () =>
         for partialUrl in url
             if partialUrl.indexOf('cozycloud.cc') isnt -1
                 cozyUrl = 'https://' + partialUrl 
-        sendRequestRemote name, password, cozyUrl, folder, 0, (err, remotePassword) =>
+        sendRequestRemote name, password, cozyUrl, folder, 0, (err, remotePwd) =>
             if err
                 alert err
             else
-                callReplications cozyUrl, name, remotePassword, (err, res)=>
+                callReplications cozyUrl, name, remotePwd, (err, res)=>
                     alert err if err
-                    #callCouchFuse folder, (err, res) =>
-                        #alert err if err
                     alert 'Your remote is well configured'
 
 
@@ -33,7 +31,8 @@ initDb = (callback) =>
                 "    if(doc._deleted) {\n" +
                 "        return true; \n" +
                 "    }\n" +
-                "    if ((doc.docType && doc.docType === \"File\") ||(doc.docType && doc.docType === \"Folder\"))  {\n" +
+                "    if ((doc.docType && doc.docType === \"File\") || " +
+                "(doc.docType && doc.docType === \"Folder\"))  {\n" +
                 "        return true; \n"+
                 "    } else { \n" +
                 "        return false; \n" +
@@ -63,8 +62,9 @@ initDb = (callback) =>
                         "}"
             db.saveDoc docFolder, callback
 
-sendRequestRemote = (name, password, url, folder, test, callback) =>
-    urlReq = '/cozy/_test/?name=' + name + '&password=' + password + "&url=" + url 
+sendRequestRemote = (name, password, url, folder, test, cb) =>
+    urlReq = '/cozy/_test/?name=' + name + '&password=' + password + 
+        "&url=" + url 
     if test is 2
         callback "Error: check your cozy url"
     else
@@ -73,14 +73,15 @@ sendRequestRemote = (name, password, url, folder, test, callback) =>
             method: 'GET'
         db.request req, (err, body) =>
             if err?.status is 400
-                alert "Wrong password or your a remote with this name already exists"
+                alert "Wrong password or your a remote with this name already" +
+                    " exists"
             else if err?
-                sendRequestRemote name, password, url, folder, test + 1, callback
+                sendRequestRemote name, password, url, folder, test + 1, cb
             else
                 data = JSON.parse body
                 storeRemote url, name, data.password, folder, (err, res) =>
-                    callback(err) if err
-                    callback null, data.password
+                    cb(err) if err
+                    cb null, data.password
 
 storeRemote = (url, name, password, folder, callback) =>
     doc =
@@ -114,10 +115,3 @@ callReplications = (url, name, password, callback) =>
             "continuous": true
             "filter": "filter/filesfilter"
         replication.start data, callback
-
-###callCouchFuse = (path, callback) =>
-    urlReq = 'https://localhost:5984/cozy/_fuse'
-    req =
-        url: urlReq
-        method: 'GET'
-    db.request req, callback###

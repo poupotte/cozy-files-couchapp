@@ -15,6 +15,9 @@ body {
 
 #title {
     background-color: #46363a;
+	border: 1px #11869f;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
 }
 
 h1 {
