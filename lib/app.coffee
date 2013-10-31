@@ -16,9 +16,10 @@ exports.addRemote =  () =>
             if err
                 alert err
             else
-                callReplications cozyUrl, name, devicePwd, deviceId, (err, res)=>
+                callReplications cozyUrl, name, devicePwd, deviceId, (err, id)=>
                     alert err if err
-                    alert 'Your remote is well configured'
+                    updateDevice cozyUrl, name, password, id, folder, () =>
+                        alert 'Your remote is well configured'
 
 
 initDb = (callback) =>   
@@ -77,15 +78,11 @@ sendRequestRemote = (name, password, url, folder, test, cb) =>
                 #    cb(err) if err
                 cb null, data.password, data.id
 
-storeRemote = (url, name, password, id, folder, callback) =>
-    doc =
-        id: id
-        name: name
-        password: password
-        url: url
-        folder: folder
-        docType: 'Device'
-    db.saveDoc doc, callback
+updateDevice = (url, name, password, id, folder, callback) =>
+    db.getDoc id, (err, doc) =>
+        doc.url = url
+        doc.folder = folder
+        db.saveDoc doc, callback
 
 
 secondReplication = (data, id, callback) =>
@@ -115,7 +112,8 @@ secondReplication = (data, id, callback) =>
                     filters: 
                         filter: filter
                 db.saveDoc doc, (err, res) ->
-                    replication.start data, callback 
+                    replication.start data, (err, res) =>
+                        callback err, id
 
 callReplications = (url, name, password, id, callback) =>
     credentials = name + ":" + password
