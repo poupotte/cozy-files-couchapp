@@ -1,9 +1,8 @@
 db = require('db').current()
-replication = require('replication')
-Base64 = require('base64')
-dbFiles = null
+replication = require 'replication'
+Base64 = require 'base64'
 
-exports.addRemote =  () =>
+exports.addRemote =  () =>     
     initDb (err, res) =>
         name = $("#name")[0].value
         password = $("#password")[0].value
@@ -13,97 +12,128 @@ exports.addRemote =  () =>
         for partialUrl in url
             if partialUrl.indexOf('cozycloud.cc') isnt -1
                 cozyUrl = 'https://' + partialUrl 
-        sendRequestRemote name, password, cozyUrl, folder, 0, (err, remotePwd) =>
+        sendRequestRemote name, password, cozyUrl, folder, 0, (err, devicePwd, deviceId) =>
             if err
                 alert err
             else
-                callReplications cozyUrl, name, remotePwd, (err, res)=>
+                callReplications cozyUrl, name, devicePwd, deviceId, (err, res)=>
                     alert err if err
                     alert 'Your remote is well configured'
 
 
 initDb = (callback) =>   
-    # Init filter
-    filter =
-        _id: "_design/filter"
-        filters:
-            filesfilter: "function (doc, req) {\n" +
-                "    if(doc._deleted) {\n" +
-                "        return true; \n" +
-                "    }\n" +
-                "    if ((doc.docType && doc.docType === \"File\") || " +
-                "(doc.docType && doc.docType === \"Folder\"))  {\n" +
-                "        return true; \n"+
-                "    } else { \n" +
-                "        return false; \n" +
-                "    }\n" +
+    # Init file view
+    docFile = 
+        _id: "_design/file"
+        views:
+            "all": 
+                "map": "function (doc) {\n" +
+                "    if (doc.docType === \"File\") {\n" +
+                "        emit(doc.id, doc) \n" +
+                "    }\n" + 
                 "}"
-    db.saveDoc filter, (err, res) => 
-        # Init file view
-        docFile = 
-            _id: "_design/file"
+            "byFolder":
+                "map": "function (doc) {\n" +
+                "    if (doc.docType === \"File\") {\n" +
+                "        emit(doc.path + '/' + doc.name, doc) \n" +
+                "    }\n" + 
+                "}"
+    db.saveDoc docFile, (err, res) =>
+        # Init folder view
+        docFolder = 
+            _id: "_design/folder"
             views:
                 "all": 
                     "map": "function (doc) {\n" +
-                    "    if (doc.docType === \"File\") {\n" +
+                    "    if (doc.docType === \"Folder\") {\n" +
                     "        emit(doc.id, doc) \n" +
                     "    }\n" + 
                     "}"
-        db.saveDoc docFile, (err, res) =>
-            # Init folder view
-            docFolder = 
-                _id: "_design/folder"
-                views:
-                    "all": 
-                        "map": "function (doc) {\n" +
-                        "    if (doc.docType === \"Folder\") {\n" +
-                        "        emit(doc.id, doc) \n" +
-                        "    }\n" + 
-                        "}"
-            db.saveDoc docFolder, callback
+                "byFolder":
+                    "map": "function (doc) {\n" +
+                    "    if (doc.docType === \"Folder\") {\n" +
+                    "        emit(doc.path + '/' + doc.name, doc) \n" +
+                    "    }\n" + 
+                    "}"
+        db.saveDoc docFolder, callback
 
 sendRequestRemote = (name, password, url, folder, test, cb) =>
     urlReq = '/cozy/_test/?name=' + name + '&password=' + password + 
         "&url=" + url 
     if test is 2
-        callback "Error: check your cozy url"
+        cb "Error: check your cozy url"
     else
         req =
             url: urlReq
-            method: 'GET'
         db.request req, (err, body) =>
             if err?.status is 400
-                alert "Wrong password or your a remote with this name already" +
+                alert "Wrong password or a device has already this name" +
                     " exists"
             else if err?
                 sendRequestRemote name, password, url, folder, test + 1, cb
             else
                 data = JSON.parse body
-                storeRemote url, name, data.password, folder, (err, res) =>
-                    cb(err) if err
-                    cb null, data.password
+                #storeRemote url, name, data.password, data.id, folder, (err, res) =>
+                #    cb(err) if err
+                cb null, data.password, data.id
 
-storeRemote = (url, name, password, folder, callback) =>
+storeRemote = (url, name, password, id, folder, callback) =>
     doc =
+        id: id
         name: name
         password: password
         url: url
         folder: folder
-        docType: 'Remote'
+        docType: 'Device'
     db.saveDoc doc, callback
 
-callReplications = (url, name, password, callback) =>
+
+secondReplication = (data, id, callback) =>
+    db.getDoc id, (err, res) =>
+        if not res
+            setTimeout ()->
+                secondReplication data, id, callback
+            , 500
+        else
+            filter = "    if(doc._deleted) {\n" +
+                "        return true; \n" +
+                "    }\n" +
+                "    if ("
+            db.getDoc id, (err, doc) =>
+                for docType, path of doc.configuration
+                    filter = filter + "(doc.docType && doc.docType === \"#{docType}\") ||"
+                filter = filter.substring(0, filter.length-3)
+                filter = filter + "){\n" +
+                    "        return true; \n"+
+                    "    } else { \n" +
+                    "        return false; \n" +
+                    "    }\n" +
+                    "}"
+                doc =
+                    _id: "_design/#{id}"
+                    views: {}
+                    filters: 
+                        filter: filter
+                db.saveDoc doc, (err, res) ->
+                    replication.start data, callback 
+
+callReplications = (url, name, password, id, callback) =>
     credentials = name + ":" + password
     basicCredentials = Base64.encode(credentials);
     authSource = "Basic " + basicCredentials
+    basicCredentials = Base64.encode("test:secret");
+    authTarget = "Basic " + basicCredentials
     data = 
         "source": 
             "url" : url + '/cozy'
             "headers": 
                 "Authorization": authSource
-        "target": "cozy"
+        "target": 
+            "url" : "http://localhost:5984/cozy"
+            "headers": 
+                "Authorization": authTarget
         "continuous": true
-        "filter": "filter/filesfilter"
+        "filter": "#{id}/filter"
     replication.start data, (err, res) =>
         callback err if err?
         data = 
@@ -111,7 +141,10 @@ callReplications = (url, name, password, callback) =>
                 "url" : url + '/cozy'
                 "headers": 
                     "Authorization": authSource
-            "source": "cozy"
+            "source":  
+                "url" : "http://localhost:5984/cozy"
+                "headers": 
+                    "Authorization": authTarget
             "continuous": true
-            "filter": "filter/filesfilter"
-        replication.start data, callback
+            "filter": "#{id}/filter"
+        secondReplication data, id, callback

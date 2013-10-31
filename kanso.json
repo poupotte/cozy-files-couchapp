@@ -1,5 +1,5 @@
 {
-    "name": "Cozy-files",
+    "name": "cozy-files",
     "version": "0.0.1",
     "description": "Configure your data proxy",
     "load": "lib/app",
