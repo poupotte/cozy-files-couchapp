@@ -74,14 +74,13 @@ sendRequestRemote = (name, password, url, folder, test, cb) =>
                 sendRequestRemote name, password, url, folder, test + 1, cb
             else
                 data = JSON.parse body
-                #storeRemote url, name, data.password, data.id, folder, (err, res) =>
-                #    cb(err) if err
                 cb null, data.password, data.id
 
 updateDevice = (url, name, password, id, folder, callback) =>
     db.getDoc id, (err, doc) =>
         doc.url = url
         doc.folder = folder
+        doc.change = 0
         db.saveDoc doc, callback
 
 
