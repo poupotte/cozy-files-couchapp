@@ -36,7 +36,7 @@ initDb = (callback) =>
             "byFolder":
                 "map": "function (doc) {\n" +
                 "    if (doc.docType === \"File\") {\n" +
-                "        emit(doc.path + '/' + doc.name, doc) \n" +
+                "        emit(doc.path, doc) \n" +
                 "    }\n" + 
                 "}"
     db.saveDoc docFile, (err, res) =>
@@ -53,7 +53,7 @@ initDb = (callback) =>
                 "byFolder":
                     "map": "function (doc) {\n" +
                     "    if (doc.docType === \"Folder\") {\n" +
-                    "        emit(doc.path + '/' + doc.name, doc) \n" +
+                    "        emit(doc.path, doc) \n" +
                     "    }\n" + 
                     "}"
         db.saveDoc docFolder, callback
