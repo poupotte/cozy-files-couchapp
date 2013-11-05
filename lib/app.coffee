@@ -91,7 +91,8 @@ secondReplication = (data, id, callback) =>
                 secondReplication data, id, callback
             , 500
         else
-            filter = "    if(doc._deleted) {\n" +
+            filter = "function(doc, req) {" +
+                "    if(doc._deleted) {\n" +
                 "        return true; \n" +
                 "    }\n" +
                 "    if ("
