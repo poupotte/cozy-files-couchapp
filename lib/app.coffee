@@ -59,7 +59,7 @@ initDb = (callback) =>
         db.saveDoc docFolder, callback
 
 sendRequestRemote = (name, password, url, folder, test, cb) =>
-    urlReq = '/cozy/_test/?name=' + name + '&password=' + password + 
+    urlReq = '/cozy/_replication/?name=' + name + '&password=' + password + 
         "&url=" + url 
     if test is 2
         cb "Error: check your cozy url"
