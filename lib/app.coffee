@@ -1,8 +1,9 @@
 db = require('db').current()
 replication = require 'replication'
 Base64 = require 'base64'
+database = "cozy"
 
-exports.addRemote =  () =>     
+exports.addRemote =  () => 
     initDb (err, res) =>
         name = $("#name")[0].value
         password = $("#password")[0].value
@@ -59,8 +60,7 @@ initDb = (callback) =>
         db.saveDoc docFolder, callback
 
 sendRequestRemote = (name, password, url, folder, test, cb) =>
-    urlReq = '/cozy/_replication/?name=' + name + '&password=' + password + 
-        "&url=" + url 
+    urlReq = "/#{database}/_replication/?name=#{name}&password=#{password}&url=#{url}" 
     if test is 2
         cb "Error: check your cozy url"
     else
@@ -118,18 +118,14 @@ secondReplication = (data, id, callback) =>
 callReplications = (url, name, password, id, callback) =>
     credentials = name + ":" + password
     basicCredentials = Base64.encode(credentials);
-    authSource = "Basic " + basicCredentials
-    basicCredentials = Base64.encode("test:secret");
-    authTarget = "Basic " + basicCredentials
+    auth = "Basic " + basicCredentials
     data = 
         "source": 
             "url" : url + '/cozy'
             "headers": 
-                "Authorization": authSource
+                "Authorization": auth
         "target": 
-            "url" : "http://localhost:5984/cozy"
-            "headers": 
-                "Authorization": authTarget
+            "url" : "http://localhost:5984/#{database}"
         "continuous": true
         "filter": "#{id}/filter"
     replication.start data, (err, res) =>
@@ -138,11 +134,9 @@ callReplications = (url, name, password, id, callback) =>
             "target": 
                 "url" : url + '/cozy'
                 "headers": 
-                    "Authorization": authSource
+                    "Authorization": auth
             "source":  
-                "url" : "http://localhost:5984/cozy"
-                "headers": 
-                    "Authorization": authTarget
+                "url" : "http://localhost:5984/#{database}"
             "continuous": true
             "filter": "#{id}/filter"
         secondReplication data, id, callback
