@@ -1,7 +1,7 @@
 db = require('db').current()
 replication = require 'replication'
 Base64 = require 'base64'
-database = "cozy"
+database = "cozy-files"
 
 exports.addRemote =  () => 
     initDb (err, res) =>
