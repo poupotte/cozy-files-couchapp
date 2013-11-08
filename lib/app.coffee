@@ -17,16 +17,13 @@ exports.addRemote =  () =>
             if err
                 alert err 
             else  
-                sendRequestRemote name, password, cozyUrl, folder, 0, 
-                    (err, devicePwd, deviceId) =>
+                sendRequestRemote name, password, cozyUrl, folder, 0, (err, devicePwd, deviceId) =>
                     if err
                         alert err
                     else
-                        callReplications cozyUrl, name, devicePwd, deviceId, 
-                            (err, id)=>
+                        callReplications cozyUrl, name, devicePwd, deviceId, (err, id)=>
                             alert err if err
-                            updateDevice cozyUrl, name, password, id, folder, 
-                                () =>
+                            updateDevice cozyUrl, name, password, id, folder, () =>
                                 alert 'Your remote is well configured' if not err
 
 
@@ -81,7 +78,7 @@ checkData = (name, password, url, folder, cb) =>
     if name is "" or password is "" or url is "" or folder is "" 
         cb "All fields should be filled"
     else
-
+        cb false
 
 ## function sendRequestRemote (name, password, url folder, test, cb)
 ## @name {string} Device name
